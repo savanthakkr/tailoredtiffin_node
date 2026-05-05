@@ -9,7 +9,7 @@ exports.dbs = {
 exports.dbs_login = {
     apiservice: {
         user: 'root',
-        password: 'pAssW1@!1!!123'
+        password: ''
     }
 };
 // 127.0.0.1

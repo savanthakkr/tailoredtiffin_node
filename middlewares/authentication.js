@@ -81,23 +81,31 @@ exports.policeStationAuthentication = async (req, res, next) => {
 
 exports.adminAuthentication = async (req, res, next) => {
     try {
-        const token = req?.headers?.authorization;
+        const authHeader = req?.headers?.authorization;
+        const token = typeof authHeader === 'string' && authHeader.toLowerCase().startsWith('bearer ')
+            ? authHeader.slice(7).trim()
+            : authHeader;
 
         if (!token) {
             return unauthorizedResponse(res, 'Invalid token.');
         }
 
         let condition = `WHERE admin_token_JWT = '${token}' AND is_active = 1 AND is_delete = 0`;
-        let selectFields = 'admin_token_Id, admin_Id, admin_token_JWT, admin_token_Firebase'
-        const adminTokenData = await dbquery.fetchSingleRecord(constants.vals.defaultDB, 'admin_token', condition, selectFields);
+        const adminTokenData = await dbquery.fetchSingleRecord(constants.vals.defaultDB, 'admin_token', condition);
 
         if (Array.isArray(adminTokenData) && adminTokenData.length == 0) {
             return unauthorizedResponse(res, 'Invalid token.');
         } else {
-            let adminCondition = `WHERE admin_Id = ${adminTokenData.admin_Id} AND is_active = 1 AND is_delete = 0`;
+            const adminId = adminTokenData?.admin_id || adminTokenData?.admin_Id;
+            if (!adminId) {
+                return unauthorizedResponse(res, 'Invalid token.');
+            }
+
+            let adminCondition = `WHERE (admin_id = ${adminId} OR admin_Id = ${adminId}) AND is_active = 1 AND is_delete = 0`;
             const admin = await dbquery.fetchSingleRecord(constants.vals.defaultDB, 'admins', adminCondition);
 
             delete adminTokenData.admin_Id;
+            delete adminTokenData.admin_id;
 
             const userData = { ...admin, ...adminTokenData };
 

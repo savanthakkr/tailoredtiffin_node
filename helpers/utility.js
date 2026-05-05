@@ -192,8 +192,8 @@ exports.addAuthenticationLogs = async (userId, logAction, logStatus, ipAddress) 
 // Add data to the api log table
 exports.addApiLogs = async (apiLogObj) => {
 	await db.query(
-		'INSERT INTO api_log (api_log_Endpoint, api_log_Method, api_log_Request, api_log_Response, api_log_StatusCode) VALUES (?, ?, ?, ?, ?)',
-		[apiLogObj?.api_log_Endpoint, apiLogObj?.api_log_Method, apiLogObj?.api_log_Request, apiLogObj?.api_log_Response, apiLogObj?.api_log_StatusCode]
+		'INSERT INTO api_log (endpoint, request_method, request_payload, response_payload, status_code) VALUES (?, ?, ?, ?, ?)',
+		[apiLogObj?.endpoint, apiLogObj?.request_method, apiLogObj?.request_payload, apiLogObj?.response_payload, apiLogObj?.status_code]
 	);
 }
 
@@ -201,8 +201,8 @@ exports.addApiLogs = async (apiLogObj) => {
 exports.responseHandler = async (response, apiLogObj, code, res) => {
 
 	// Set api log table data
-	apiLogObj.api_log_Response = data?.security_text;
-	apiLogObj.api_log_StatusCode = code;
+	apiLogObj.response_payload = data?.security_text;
+	apiLogObj.status_code = code;
 
 	// Add api log data
 	await this.addApiLogs(apiLogObj);
@@ -1449,11 +1449,11 @@ exports.apiResponse = async function (req, res, response) {
 	response = await utility.nestedObjToStr(req, response);
 
 	const params = {
-		api_log_Endpoint: req.originalUrl,
-		api_log_Method: req.method,
-		api_log_Request: JSON.stringify(req?.body),
-		api_log_Response: JSON.stringify(response),
-		api_log_StatusCode: 200,
+		endpoint: req.originalUrl,
+		request_method: req.method,
+		request_payload: JSON.stringify(req?.body),
+		response_payload: JSON.stringify(response),
+		status_code: 200,
 		created_at: new Date()
 	}
 
